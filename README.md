@@ -8,3 +8,5 @@ Hőszivattyú vezérlő: Guangdong Chico Electronic INs. RBXH0000-0628C008 típu
 Hőmennyiség mérő: Mainone Ultrasonic Heat Meter, DN25，RS-485 ModBus
 
 Villamos figyasztásmérő: PRO380-Mod 100A MID
+
+ESP: Olimex ESP32-EVB
