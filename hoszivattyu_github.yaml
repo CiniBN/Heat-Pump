@@ -1,0 +1,468 @@
+esphome:
+  name: "hoszivattyu"
+  friendly_name: "Hőszivattyú"
+
+esp32:
+  board: esp32-evb
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "YOUR API KEY"
+
+ota:
+  - platform: esphome
+    password: "YOUR OTA PASSWORD"
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 0
+
+  # Configure static ip 
+  manual_ip:
+    static_ip: 192.168.1.18 #"YOUR IP ADDRESS"
+    gateway: 192.168.1.1    #"YOUR GATEWAY ADDRESS"
+    subnet: 255.255.255.0
+
+web_server:
+  port: 80
+
+# ++++++++++Conf MODBUS  RS485 ++++++++++++
+uart:
+  id: mod_bus
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+  parity: NONE 
+  stop_bits: 1
+
+modbus:  
+  id: modbus1
+
+# ++++++++++Conf MODBUS  Controllers ++++++++++++
+
+modbus_controller:
+  - id: hsz_vezerlo
+    address: 0x0001
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 2s
+    command_throttle: 200ms
+  
+  - id: hsz_vill_fogy_mero
+    address: 0x0003
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 5s
+    command_throttle: 500ms
+
+  - id: hsz_hommero
+    address: 0x0002
+    modbus_id: modbus1
+    setup_priority: -10
+    update_interval: 5s
+    command_throttle: 500ms
+
+
+binary_sensor:
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_kompresszor_status
+  name: "Kompresszor"
+  register_type: holding
+  address: 0x800B
+  bitmask: 0x0001
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_ventillator_status
+  name: "Ventillátor"
+  register_type: holding
+  address: 0x800B
+  bitmask: 0x0002
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_4_utu_szelep_status
+  name: "4-utú szelep"
+  register_type: holding
+  address: 0x800B
+  bitmask: 0x0004
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_cirkulacios_szivattyu
+  name: "Cirkulációs szivattyú"
+  register_type: holding
+  address: 0x800B
+  bitmask: 0x0008
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_ventillator_magas
+  name: "Ventillátor magas fordulat"
+  register_type: holding
+  address: 0x800C
+  bitmask: 0x0002
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_ventillator_alacsony
+  name: "Ventillátor alacsony fordulat"
+  register_type: holding
+  address: 0x800C
+  bitmask: 0x0004
+
+sensor:
+
+#  Sensors Hőszivattyő vezérlő
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_status
+  name: "Státusz"
+  address: 0x800B
+  register_type: holding
+  value_type: S_WORD
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_kompresszor_aram
+  name: "Kompresszor áramerősség"
+  address: 0x8015
+  state_class: measurement
+  device_class: current
+  unit_of_measurement: "A" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_puffer_vizhofok
+  name: "Puffer vízhőmérséklet"
+  address: 0x801F
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_kulso_homerseklet
+  name: "Külső hőmérséklet"
+  address: 0x8020
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_elparologtato_homerseklet
+  name: "Elpárologtató hőmérséklet"
+  address: 0x8021
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_nyomoag_homerseklet
+  name: "Nyomóág hőmérséklet"
+  address: 0x8023
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_szivoag_homerseklet
+  name: "Szívóág hőmérséklet"
+  address: 0x8025
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_visszatero_vizhomerseklet
+  name: "Visszatérő vízhőmérséklet"
+  address: 0x8027
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_eloremeno_vizhofok
+  name: "Előremenő vízhőmérséklet"
+  address: 0x8028
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 0
+    
+
+#  Sensors Hőszivattyú villamos fogyasztásmérő
+- platform: modbus_controller
+  modbus_controller_id: hsz_vill_fogy_mero
+  id: hsz_pillanatnyi_hatasos_villamos_teljesitmeny
+  name: "Pillanatnyi hatásos villamos teljesítmény"
+  address: 0x5012
+  state_class: measurement
+  device_class: power
+  unit_of_measurement: "kW" 
+  register_type: holding
+  value_type: FP32
+  accuracy_decimals: 2
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vill_fogy_mero
+  id: hsz_import_hatasos_villamos_energia
+  name: "Import hatásos villamos energia"
+  address: 0x600C
+  state_class: total_increasing
+  device_class: energy
+  unit_of_measurement: "kWh" 
+  register_type: holding
+  value_type: FP32
+  accuracy_decimals: 2
+
+#  Sensors Hőszivattyú Hőmennyiségmérő
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_kimeno_vizhomerseklet
+  name: "Hőcserélő kimenő vízhőmérséklet"
+  address: 0x0005
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 2
+  filters:
+    - multiply: 0.01
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_bemeno_vizhomerseklet
+  name: "Hőcserélő bemenő vízhőmérséklet"
+  address: 0x0007
+  state_class: measurement
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  accuracy_decimals: 2
+  filters:
+    - multiply: 0.01
+
+- platform: template
+  id: dt
+  name: "Hőcserélő ΔT"
+  device_class: temperature
+  unit_of_measurement: "°C"
+  accuracy_decimals: 2
+  lambda: |-
+    return id(hsz_kimeno_vizhomerseklet).state - id(hsz_bemeno_vizhomerseklet).state;
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_hocserelo_pillanatnyi_aramlasi_sebesseg
+  name: "Hőcserélő pillanatnyi áramlási sebesség"
+  address: 0x000B
+  state_class: measurement
+  device_class: volume_flow_rate
+  unit_of_measurement: "m³/h" 
+  register_type: holding
+  value_type: S_DWORD_R
+  accuracy_decimals: 2
+  filters:
+    - multiply: 0.001
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_hocserelo_osszes_ataramlott_viz
+  name: "Hőcserélő összes átáramlott víz"
+  address: 0x000D
+  state_class: measurement
+  device_class: volume
+  unit_of_measurement: "l" 
+  register_type: holding
+  value_type: S_DWORD_R
+  accuracy_decimals: 2
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_hocserelo_pillanatnyi_homennyiseg
+  name: "Hőcserélő pillanatnyi hőmennyiség"
+  address: 0x000F
+  state_class: measurement
+  device_class: power
+  unit_of_measurement: "kW" 
+  register_type: holding
+  value_type: S_DWORD_R
+  accuracy_decimals: 2
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_hommero
+  id: hsz_hocserelo_osszes_homennyiseg
+  name: "Hőcserélő összes hőmennyiség"
+  address: 0x0017
+  state_class: total_increasing
+  device_class: energy
+  unit_of_measurement: "kWh" 
+  register_type: holding
+  value_type: S_DWORD_R
+  accuracy_decimals: 2
+
+- platform: duty_time
+  id: hsz_futasi_ido
+  name: Futásidő
+  internal: True
+  lambda: |-
+    return id(hsz_vezerlo_on_off).state;
+
+- platform: template
+  id: hsz_cop
+  name: "CoP"
+  lambda: |-
+    float q = id(hsz_pillanatnyi_hatasos_villamos_teljesitmeny).state; 
+    float w = id(hsz_hocserelo_pillanatnyi_homennyiseg).state;
+    if (id(hsz_kompresszor_status).state == 1) {
+      if (w >= 0 and q > 0) {
+        return (w / q);
+      } else {
+        return (0);
+      }
+    } else {
+      return (0);
+    }
+  unit_of_measurement: "CoP"
+
+- platform: template
+  id: hsz_scop
+  name: "SCoP"
+  lambda: |-
+    float q = id(hsz_import_hatasos_villamos_energia).state; 
+    float w = id(hsz_hocserelo_osszes_homennyiseg).state;
+    if (w >= 0 and q > 0) {
+      return (w / q);
+    } else {
+      return (0);
+    }
+  unit_of_measurement: "SCoP"
+
+#  Switch Hőszivattyő vezérlő
+
+switch:
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_vezerlo_on_off
+  use_write_multiple: false
+  name: "KI/BE"
+  address: 0x0000
+  register_type: holding
+  bitmask: 1
+  entity_category: config
+
+select:
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_mod
+  use_write_multiple: false
+  name: "Üzemmód"
+  address: 0x0002
+  value_type: S_WORD
+  optionsmap:
+    "Hűtés": 0
+    "Fűtés": 1
+
+#  Number Hőszivattyő vezérlő
+number:
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_cel_homerseklet
+  name: "Cél hőmérséklet"
+  use_write_multiple: false
+  address: 0x002F
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  min_value: 5
+  max_value: 55
+  step: 1
+  mode: BOX
+
+- platform: modbus_controller
+  modbus_controller_id: hsz_vezerlo
+  id: hsz_hutes_homerseklet
+  name: "Hűtés hőmérséklet"
+  use_write_multiple: false
+  address: 0x0030
+  device_class: temperature
+  unit_of_measurement: "°C" 
+  register_type: holding
+  value_type: S_WORD
+  min_value: 8
+  max_value: 35
+  step: 1
+  mode: BOX
+
+text_sensor:
+  - platform: template
+    id: futasi_ido
+    name: "Futási idő"
+    lambda: |-
+      uint32_t dur = id(hsz_futasi_ido).state;
+      int dys = 0;
+      int hrs = 0;
+      int mnts = 0;
+      if (dur > 86399) {
+        dys = trunc(dur / 86400);
+        dur = dur - (dys * 86400);
+      }
+      if (dur > 3599) {
+        hrs = trunc(dur / 3600);
+        dur = dur - (hrs * 3600);
+      }
+      if (dur > 59) {
+        mnts = trunc(dur / 60);
+        dur = dur - (mnts * 60);
+      }
+      char buffer[17];
+      sprintf(buffer, "%u:%02u:%02u.%02us", dys, hrs, mnts, dur);
+      return {buffer};
+    icon: mdi:clock-start
+    update_interval: 15s
+
+
+    
